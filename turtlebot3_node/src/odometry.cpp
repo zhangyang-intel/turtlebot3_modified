@@ -146,7 +146,7 @@ void Odometry::publish(const rclcpp::Time & now)
   odom_msg->header.frame_id = frame_id_of_odometry_;
   odom_msg->child_frame_id = child_frame_id_of_odometry_;
   odom_msg->header.stamp = now;
-
+//RCLCPP_INFO(nh_->get_logger(),"robot_pose_[0]: %f,  robot_pose_[1]: %f",robot_pose_[0],robot_pose_[1]);
   odom_msg->pose.pose.position.x = robot_pose_[0];
   odom_msg->pose.pose.position.y = robot_pose_[1];
   odom_msg->pose.pose.position.z = 0;
@@ -187,8 +187,9 @@ void Odometry::publish(const rclcpp::Time & now)
   odom_tf.header.frame_id = frame_id_of_odometry_;
   odom_tf.child_frame_id = child_frame_id_of_odometry_;
   odom_tf.header.stamp = now;
-
+//RCLCPP_INFO(nh_->get_logger(),"odom_msg:  positionx: %f,  positiony: %f",odom_msg->pose.pose.position.x,odom_msg->pose.pose.position.y);
   odom_pub_->publish(std::move(odom_msg));
+  //RCLCPP_INFO(nh_->get_logger(),"odom_msg:  positionx: %d,  positiony: %d",odom_msg->pose.pose.position.x,odom_msg->pose.pose.position.y);
 
   if (publish_tf_) {
     tf_broadcaster_->sendTransform(odom_tf);
@@ -199,9 +200,13 @@ void Odometry::update_joint_state(
   const std::shared_ptr<sensor_msgs::msg::JointState const> & joint_state)
 {
   static std::array<double, 2> last_joint_positions = {0.0f, 0.0f};
+  //RCLCPP_INFO(nh_->get_logger(), "joint_state->position[0] : %f,  joint_state->position[1] : %f", joint_state->position[0],joint_state->position[1]);
 
   diff_joint_positions_[0] = joint_state->position[0] - last_joint_positions[0];
   diff_joint_positions_[1] = joint_state->position[1] - last_joint_positions[1];
+
+  //if(diff_joint_positions_[0]>100)  diff_joint_positions_[0] = 0;
+  //if(diff_joint_positions_[1]>100)  diff_joint_positions_[1] = 0;
 
   last_joint_positions[0] = joint_state->position[0];
   last_joint_positions[1] = joint_state->position[1];
@@ -219,6 +224,8 @@ bool Odometry::calculate_odometry(const rclcpp::Duration & duration)
   // rotation value of wheel [rad]
   double wheel_l = diff_joint_positions_[0];
   double wheel_r = diff_joint_positions_[1];
+  //RCLCPP_INFO(nh_->get_logger(), "wheel_l : %f   ,wheel_r : %f", wheel_l,wheel_r);
+
 
   double delta_s = 0.0;
   double delta_theta = 0.0;
@@ -246,7 +253,7 @@ bool Odometry::calculate_odometry(const rclcpp::Duration & duration)
   }
 
   delta_s = wheels_radius_ * (wheel_r + wheel_l) / 2.0;
-
+//RCLCPP_INFO(nh_->get_logger(), "delta_s : %f", delta_s);
   if (use_imu_) {
     theta = imu_angle_;
     delta_theta = theta - last_theta;

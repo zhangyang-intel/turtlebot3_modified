@@ -30,6 +30,7 @@ JointState::JointState(
   const std::string & frame_id)
 : Sensors(nh, frame_id)
 {
+  first_flag = true;
   pub_ = nh->create_publisher<sensor_msgs::msg::JointState>(topic_name, this->qos_);
 
   RCLCPP_INFO(nh_->get_logger(), "Succeeded to create joint state publisher");
@@ -73,6 +74,9 @@ void JointState::publish(
   msg->name.push_back("wheel_left_joint");
   msg->name.push_back("wheel_right_joint");
 
+  //RCLCPP_INFO(nh_->get_logger(), "position[0]:  %d,position[1]:  %d",position[0],position[1]);
+  //RCLCPP_INFO(nh_->get_logger(), "last_diff_position[0]:  %d,last_diff_position[1]:  %d",last_diff_position[0],last_diff_position[1]);
+
   msg->position.push_back(TICK_TO_RAD * last_diff_position[0]);
   msg->position.push_back(TICK_TO_RAD * last_diff_position[1]);
 
@@ -82,10 +86,55 @@ void JointState::publish(
   // msg->effort.push_back(current[0]);
   // msg->effort.push_back(current[1]);
 
-  last_diff_position[0] += (position[0] - last_position[0]);
-  last_diff_position[1] += (position[1] - last_position[1]);
+  if(first_flag)
+  {
 
-  last_position = position;
+    last_diff_position[0] += (position[0] - last_position[0]);
+    last_diff_position[1] += (position[1] - last_position[1]);
+    last_position = position;
+    RCLCPP_INFO(nh_->get_logger(), "This package will filter the outliers");
+    RCLCPP_INFO(nh_->get_logger(), "at the beginning:position[0]:  %d,position[1]:  %d",position[0],position[1]);
+    first_flag = false;
+
+  }
+  else{
+    //bool tmp_flag = false;
+      if(abs(position[0] - last_position[0])>1000)
+  {
+
+    RCLCPP_INFO(nh_->get_logger(), "position_0 outlier occurs, attention:!!!! position[0]:  %d,position[1]:  %d",position[0],position[1]);
+    //tmp_flag = true;
+  }
+
+  if(abs(position[0] - last_position[0])>1000 || abs(position[1] - last_position[1])>1000)
+  {
+
+    RCLCPP_INFO(nh_->get_logger(), "position_1 outlier occurs, attention:!!!! position[0]:  %d,position[1]:  %d",position[0],position[1]);
+    //tmp_flag = true;
+  }
+
+    if(abs(position[0] - last_position[0])<5000)
+    {
+      last_diff_position[0] += (position[0] - last_position[0]);
+      last_position[0] = position[0];
+    }
+    if(abs(position[1] - last_position[1])<5000)
+    {
+      last_diff_position[1] += (position[1] - last_position[1]);
+      last_position[1] = position[1];
+    }
+
+    // if(tmp_flag)
+    // {
+    //   RCLCPP_INFO(nh_->get_logger(), "after process:last_position[0]:  %d,last_position[1]:  %d",last_position[0],last_position[1]);
+    //   RCLCPP_INFO(nh_->get_logger(), "after process:position[0]:  %d,position[1]:  %d",position[0],position[1]);
+    // }
+
+  }
+
+  // last_diff_position[0] += (position[0] - last_position[0]);
+  // last_diff_position[1] += (position[1] - last_position[1]);
+  // last_position = position;
 
   pub_->publish(std::move(msg));
 }

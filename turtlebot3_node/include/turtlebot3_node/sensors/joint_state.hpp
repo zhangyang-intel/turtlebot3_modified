@@ -52,6 +52,7 @@ public:
 
 private:
   rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr pub_;
+  bool first_flag;
 };
 }  // namespace sensors
 }  // namespace turtlebot3
