@@ -35,7 +35,7 @@ git clone -b foxy-devel https://github.com/ROBOTIS-GIT/DynamixelSDK.git
 git clone -b foxy-devel https://github.com/ROBOTIS-GIT/turtlebot3_msgs.git
 git clone -b foxy-devel https://github.com/ROBOTIS-GIT/turtlebot3.git
 cd ./turtlebot3
-git apply 0001-fix-the-problem-that-the-odometry-may-publish-an-out.patch
+git apply remove_outlier.patch
 cd ..
 source /opt/ros/foxy/setup.bash
 colcon build
